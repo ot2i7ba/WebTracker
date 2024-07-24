@@ -1,5 +1,5 @@
 # Simple Web-Link-Tracker
-Simple Web-Link-Tracker is a lightweight application to manage your bookmarks easily and efficiently. This tool is specifically adapted to my needs, originating from my [favorites](https://github.com/ot2i7ba/favorites/) project that I've been tinkering with to improve in various ways. It's a simple application with a lot of coding quirks, designed for both functionality and as a coding playground. This repository includes several key files that enable you to set up, configure, and use the application.
+Simple Web-Link-Tracker is a lightweight application to manage your bookmarks easily and efficiently. This tool is specifically adapted to my needs, originating from my [favorites](https://github.com/ot2i7ba/favorites/) project that I've been tinkering with to improve in various ways. The application is not intended to be a fully-fledged bookmark management system, but rather a bookmark scribble more or less according to the KISS [^1] principle. It's a simple application with a lot of coding quirks, designed for both functionality and as a coding playground. This repository includes several key files that enable you to set up, configure, and use the application.
 
 ## Files Overview
 - **favorites.php**: The main application file that handles the storage and management of bookmarks.
@@ -74,7 +74,7 @@ javascript:(function() {
 Replace `<YOUR_DOMAIN>` with your actual domain and `<YOUR_SECRET_VALUE>` with the secret value you defined in `favconfig.php`.
 
 > [!NOTE]
-> The `bookmarklet.txt` file **only contains the template** for the bookmarklet (Favelet)[^1]! Adapt the template, create a bookmark and then replace the URL of this newly created bookmark with the adapted content of the bookmarklet.txt. The bookmarklet.txt is not needed in file form, it should only help you to customize the URL for your individual WebTracker more easily!
+> The `bookmarklet.txt` file **only contains the template** for the bookmarklet (Favelet) [^2]! Adapt the template, create a bookmark and then replace the URL of this newly created bookmark with the adapted content of the bookmarklet.txt. The bookmarklet.txt is not needed in file form, it should only help you to customize the URL for your individual WebTracker more easily!
 
 # Usage
 - **Add Bookmarklet to Browser**: Copy the `Bookmarklet`, create a new bookmark in your browser, and paste the JavaScript code as the URL of the bookmark.
@@ -104,4 +104,11 @@ This project is provided without warranties. Users are advised to review the acc
 # Conclusion
 I use this script to keep track of all the cool OSINT links I find during my regular hunts so I don't miss a thing. I'm no professional coder or security expert, but this app is custom-tailored for me and doubles as a practice project to (hopefully) level up my skills someday. 😉
 
-[^1]: [Wikipedia](https://de.wikipedia.org/wiki/Bookmarklet)
+[^1]: [Wikipedia - KISS-Prinzip](https://de.wikipedia.org/wiki/KISS-Prinzip)
+[^2]: [Wikipedia - Bookmarklet](https://de.wikipedia.org/wiki/Bookmarklet)
+
+
+
+
+
+
