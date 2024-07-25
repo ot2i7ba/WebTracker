@@ -130,7 +130,7 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 LimitRequestBody 102400
 
 # Deny access to sensitive files
-<FilesMatch "(favconfig.php|favorites.json|favorites.lock|intruder.json|proxy.php|proxy.log|blacklist.txt)$">
+<FilesMatch "(favconfig.php|favorites.json|favorites.lock|blacklist.php|proxy.json|intruder.json)$">
     Require all denied
 </FilesMatch>
 
