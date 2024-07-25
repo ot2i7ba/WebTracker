@@ -33,6 +33,9 @@
             session_start();
             $start = microtime(true);
 
+            // Define a constant to ensure scripts are not accessed directly
+            define('IN_APP', true);
+
             // Create a session ID to avoid IP tracking
             if (!isset($_SESSION['session_id'])) {
                 $_SESSION['session_id'] = bin2hex(random_bytes(16));
@@ -104,11 +107,14 @@
             create_file_if_not_exists($file, json_encode([]));
             create_file_if_not_exists($lockFile);
             create_file_if_not_exists($intruder, json_encode([]));
-            create_file_if_not_exists($blacklist);
 
             // Function to read the blacklist
             function read_blacklist($blacklist) {
-                return file($blacklist, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+                if (!defined('IN_APP')) {
+                    header('HTTP/1.1 403 Forbidden');
+                    exit('Direct access not permitted');
+                }
+                return include($blacklist);
             }
 
             // Function to read the favorites from the JSON file with caching
@@ -439,8 +445,7 @@
         <div class="footer">
             <a href="proxy.php?secret=<?php echo SECRET_VALUE; ?>&file=favorites.json">favorites.json</a>&nbsp;&vert;
             <a href="proxy.php?secret=<?php echo SECRET_VALUE; ?>&file=intruder.json">intruder.json</a>&nbsp;&vert;
-            <a href="proxy.php?secret=<?php echo SECRET_VALUE; ?>&file=blacklist.txt">blacklist.txt</a>&nbsp;&vert;
-            <a href="proxy.php?secret=<?php echo SECRET_VALUE; ?>&file=proxy.log">proxy.log</a>&nbsp;&vert;
+            <a href="proxy.php?secret=<?php echo SECRET_VALUE; ?>&file=proxy.json">proxy.json</a>&nbsp;&vert;
             <a href="?secret=<?php echo SECRET_VALUE; ?>&backup=true">Manual Backup</a>
         </div>
 

@@ -20,7 +20,7 @@ define('BASE_PATH', '/base/path/here/favorites/');
 define('RATE_LIMIT_COUNT', 10);
 
 // Allowed files
-$allowedFiles = ['favorites.json', 'intruder.json', 'blacklist.txt', 'proxy.log'];
+$allowedFiles = ['favorites.json', 'intruder.json', 'proxy.json'];
 
 // Function to check if the requested filename is allowed
 function isAllowedFilename($filename)
@@ -62,21 +62,36 @@ $file = filter_input(INPUT_GET, 'file', FILTER_SANITIZE_STRING);
 // Function to log failed access attempts
 function logFailedAttempt($secret, $file)
 {
-    $log_file = 'proxy.log';
+    $log_file = 'proxy.json';
 
     // Check if the log file exists, create it if not
     if (!file_exists($log_file)) {
-        file_put_contents($log_file, '');
+        file_put_contents($log_file, json_encode([]));
         chmod($log_file, 0600);
     }
 
     $timestamp = date('Y-m-d H:i:s');
     $session_id = session_id();
     $remote_ip = $_SERVER['REMOTE_ADDR'];
-    $log_entry = "$timestamp\t$session_id\t$remote_ip\t$secret\t$file" . PHP_EOL;
+    $log_entry = [
+        'timestamp' => $timestamp,
+        'session_id' => $session_id,
+        'remote_ip' => $remote_ip,
+        'secret' => $secret,
+        'file' => $file
+    ];
 
-    // Append log entry to the log file
-    file_put_contents($log_file, $log_entry, FILE_APPEND);
+    // Read the existing log entries
+    $log_entries = json_decode(file_get_contents($log_file), true);
+    if (!is_array($log_entries)) {
+        $log_entries = [];
+    }
+
+    // Append the new log entry
+    $log_entries[] = $log_entry;
+
+    // Write the updated log entries back to the file
+    file_put_contents($log_file, json_encode($log_entries, JSON_PRETTY_PRINT));
 }
 
 // Function to handle errors and log attempts
@@ -98,8 +113,13 @@ if (isRateLimited()) {
     handleError(429, "Rate limit exceeded. Please wait a minute before trying again.", $secret, $file);
 }
 
-// Check if the secret value and file are provided and valid
-if ($secret !== MAGIC_WORD || !isAllowedFilename($file)) {
+// Check if the secret value is valid
+if ($secret !== MAGIC_WORD) {
+    handleError(403, "Access denied.", $secret, $file);
+}
+
+// Check if the requested file is allowed
+if (!isAllowedFilename($file)) {
     handleError(403, "Access denied.", $secret, $file);
 }
 
@@ -110,6 +130,7 @@ if ($filePath === false || strpos($filePath, BASE_PATH) !== 0 || !is_readable($f
     handleError(404, "File not found.", $secret, $file);
 }
 
+// If everything is valid, do not log the attempt
 // Clear unnecessary headers and set headers for file download
 header_remove('X-Powered-By');
 header_remove('Server');

@@ -8,7 +8,12 @@
  * @license MIT License
  */
 
-// favconfig.php
+// Ensure this file cannot be accessed directly
+if (!defined('IN_APP')) {
+    header('HTTP/1.1 403 Forbidden');
+    exit('Direct access not permitted');
+}
+
 return [
     // Secret Values
     'secrets' => [
@@ -35,6 +40,6 @@ return [
         'favorites' => 'favorites.json',
         'lock' => 'favorites.lock',
         'intruder' => 'intruder.json',
-        'blacklist' => 'blacklist.txt',
+        'blacklist' => 'blacklist.php',
     ],
 ];

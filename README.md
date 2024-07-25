@@ -31,11 +31,20 @@ I've intentionally kept this project simple by using only basic tools: PHP, a bi
 
 - **favconfig.php**<br/>Configuration file for the main application. Here, you need to define several options including a secret value.
 
+- **blacklist.php**<br/>Contains a list of domains from which bookmarks should not be saved.
+
 - **proxy.php**<br/>This file allows the opening of specific files from within the application, ensuring secure access.
 
-- **blacklist.txt**<br/>Contains a list of domains from which bookmarks should not be saved. Each domain is specified on a new line.
-
 - **bookmarklet.txt**<br/>Contains the JavaScript code for the bookmarklet, which enables users to send bookmarks to the main application easily.
+
+# Last Update (2024-07-25)
+I've made some updates to the Simple Bookmarklet Web-Link-Tracker to enhance security and functionality. Check out the changes below:
+
+- **Security Boost with IN_APP Constant**<br/>Added the IN_APP constant to make sure certain files can’t be accessed directly. It’s defined in favorites.php and checked in favconfig.php and blacklist.php to block unauthorized access.
+
+- **Switched from blacklist.txt to blacklist.php**<br/>The domain blacklist is now in blacklist.php instead of blacklist.txt. This is more secure because it prevents direct access.
+
+- **Switched from proxy.txt to proxy.json**<br/>The log file for the proxy has been switched from proxy.txt to proxy.json to better structure the data and make it easier to manage.
 
 # Configuration
 
