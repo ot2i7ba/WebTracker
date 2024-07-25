@@ -1,14 +1,43 @@
 # Simple Web-Link-Tracker
 Simple Web-Link-Tracker is a lightweight application to manage your bookmarks easily and efficiently. This tool is specifically adapted to my needs, originating from my [favorites](https://github.com/ot2i7ba/favorites/) project that I've been tinkering with to improve in various ways. The application is not intended to be a fully-fledged bookmark management system, but rather a bookmark scribble more or less according to the KISS [^1] principle. It's a simple application with a lot of coding quirks, designed for both functionality and as a coding playground. This repository includes several key files that enable you to set up, configure, and use the application.
 
-## Files Overview
-- **favorites.php**: The main application file that handles the storage and management of bookmarks.
-- **favconfig.php**: Configuration file for the main application. Here, you need to define several options including a secret value.
-- **proxy.php**: This file allows the opening of specific files from within the application, ensuring secure access.
-- **blacklist.txt**: Contains a list of domains from which bookmarks should not be saved. Each domain is specified on a new line.
-- **bookmarklet.txt**: Contains the JavaScript code for the bookmarklet, which enables users to send bookmarks to the main application easily.
+# Features
+This project is packed with a bunch of cool features that I've implemented mainly because I wanted to play around and learn more about these concepts. It's my little sandbox to test out some neat performance, security and coding mechanisms. Here's what I've included:
 
-## Configuration
+- **HTTPS Enforcement**<br/>Ensures all communication is secure by requiring HTTPS connections. If a request is made over HTTP, it's blocked.
+
+- **Simple Caching Mechanism**<br/>Implements basic caching to improve performance by storing frequently accessed data in a cache file for a set duration.
+
+- **Input Validation**<br/>All user inputs are validated and sanitized. Whether it's a URL, a string, or an integer, I make sure it's clean and safe before processing it.
+
+- **Automatic Cleanup**<br/>Periodically cleans up old data and sends backup emails to ensure data integrity and availability.
+
+- **Rate Limiting**<br/>Protects the application from being overwhelmed by limiting the number of requests per IP address per minute.
+
+- **Intrusion Detection**<br/>Unauthorized access attempts get logged in an `intruder.json` file. This helps me keep track of any funny business and understand where my security might need tightening up.
+
+- **Session Handling**<br/>To avoid tracking IP addresses, I create unique session IDs for users. This way, everyone's experience is isolated and secure.
+
+- **CSRF Token**<br/>Each session gets a CSRF token to protect against Cross-Site Request Forgery attacks. It's one of those essential web security practices that I wanted to get hands-on with.
+
+- **Secure File Access**<br/>Important files are protected via `.htaccess`, and access is only allowed through `proxy.php`, ensuring secure, controlled access within the application.
+
+Now, let's be real here – **I'm no security expert, and neither is anyone else on this planet able to guarantee 100% security**! But hey, we can throw some hurdles in the way of those pesky intruders! That's exactly what I've tried to do with these techniques, all while having a bit of fun and learning the ropes. So, enjoy the ride, appreciate the irony, but take the security bits seriously because, at the end of the day, they're there to keep our little corner of the internet safe.
+
+I've intentionally kept this project simple by using only basic tools: PHP, a bit of HTML, and CSS. No JavaScript, no external databases – just good old-fashioned coding. This approach makes it easier to manage and perfect for my learning purposes. Sure, it limits what I can do, but it suits my needs perfectly and keeps things straightforward. Plus, it's fun to see how much you can achieve with just the basics!
+
+# Files Overview
+- **favorites.php**<br/>The main application file that handles the storage and management of bookmarks.
+
+- **favconfig.php**<br/>Configuration file for the main application. Here, you need to define several options including a secret value.
+
+- **proxy.php**<br/>This file allows the opening of specific files from within the application, ensuring secure access.
+
+- **blacklist.txt**<br/>Contains a list of domains from which bookmarks should not be saved. Each domain is specified on a new line.
+
+- **bookmarklet.txt**<br/>Contains the JavaScript code for the bookmarklet, which enables users to send bookmarks to the main application easily.
+
+# Configuration
 
 ### favconfig.php
 Before using the application, you need to configure the `favconfig.php` file. Open the file and define the following options:
@@ -76,19 +105,62 @@ Replace `<YOUR_DOMAIN>` with your actual domain and `<YOUR_SECRET_VALUE>` with t
 > [!NOTE]
 > The `bookmarklet.txt` file **only contains the template** for the bookmarklet (Favelet) [^2]! Adapt the template, create a bookmark and then replace the URL of this newly created bookmark with the adapted content of the bookmarklet.txt. The bookmarklet.txt is not needed in file form, it should only help you to customize the URL for your individual WebTracker more easily!
 
+
+### .htaccess
+The configuration of your `.htaccess` [^3] file should always be tailored to your specific needs and the technical requirements of your environment. Below, I've provided an excerpt of a possible configuration that demonstrates how to enhance the security and functionality of an application. This setup is one of many ways to secure a web application and should be adjusted according to your specific use case.
+
+This example configuration complements the security measures already implemented in the `favorites.php` file. You could, of course, implement all the security settings directly in the `.htaccess`, but as mentioned, I'm having fun playing in my sandbox.
+
+```apache
+# Enable HTTPS encryption
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Limit the size of requests
+LimitRequestBody 102400
+
+# Deny access to sensitive files
+<FilesMatch "(favconfig.php|favorites.json|favorites.lock|intruder.json|proxy.php|proxy.log|blacklist.txt)$">
+    Require all denied
+</FilesMatch>
+
+# Protect against clickjacking
+Header always set X-Frame-Options "DENY"
+
+# Prevent MIME type sniffing
+Header always set X-Content-Type-Options "nosniff"
+
+# XSS protection
+Header always set X-XSS-Protection "1; mode=block"
+
+# Set Content Security Policy
+Header always set Content-Security-Policy "default-src 'self'; img-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+
+# Set HTTP Strict Transport Security (HSTS) for the subdomain
+Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+# Prevent caching by search engines
+Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+Header set Pragma "no-cache"
+Header set Expires "0"
+```
+
+This configuration helps enforce HTTPS, limit request sizes, protect sensitive files, and enhance overall security through various headers. Remember, these are just examples and may need to be adjusted to fit the specific needs and technical realities of your deployment.
+
 # Usage
-- **Add Bookmarklet to Browser**: Copy the `Bookmarklet`, create a new bookmark in your browser, and paste the JavaScript code as the URL of the bookmark.
+- **Add Bookmarklet to Browser**<br/>Copy the `Bookmarklet`, create a new bookmark in your browser, and paste the JavaScript code as the URL of the bookmark.
 
-- **Bookmarking a Page**: When you are on a page you want to bookmark, simply click the bookmarklet. This will send the page's URL and title to the Simple Web-Link-Tracker application.
+- **Bookmarking a Page**<br/>When you are on a page you want to bookmark, simply click the bookmarklet. This will send the page's URL and title to the Simple Web-Link-Tracker application.
 
-- **Manage Bookmarks**: Use the `favorites.php` application to view, edit, and manage your bookmarks.
-	- **URL**: https://<YOUR_DOMAIN>/favorites.php?secret=<YOUR_SECRET_VALUE>
+- **Manage Bookmarks**<br/>Use the `favorites.php` application to view, edit, and manage your bookmarks.<br/>**URL**: https://<YOUR_DOMAIN>/favorites.php?secret=<YOUR_SECRET_VALUE>
 
-- **Blacklist Management**: Update `blacklist.txt` to add or remove domains that should be ignored by the bookmarklet.
+- **Blacklist Management**<br/>Update `blacklist.txt` to add or remove domains that should be ignored by the bookmarklet.
 
 # Security
-Ensure that your secret value is kept confidential and is not shared. This secret value is critical for the security of your bookmark management system. The `favorites.php` file can only be accessed when the correct secret is included in the URL. This measure helps protect against unauthorized access, spam, and abuse.
-**URL**: `https://<YOUR_DOMAIN>/favorites.php?secret=<YOUR_SECRET_VALUE>`
+Ensure that your secret value is kept confidential and is not shared. This secret value is critical for the security of your bookmark management system. The `favorites.php` file can only be accessed when the correct secret is included in the URL. This measure helps protect against unauthorized access, spam, and abuse.<br/>
+
+- **URL**: `https://<YOUR_DOMAIN>/favorites.php?secret=<YOUR_SECRET_VALUE>`
 
 ___
 
@@ -104,11 +176,8 @@ This project is provided without warranties. Users are advised to review the acc
 # Conclusion
 I use this script to keep track of all the cool OSINT links I find during my regular hunts so I don't miss a thing. I'm no professional coder or security expert, but this app is custom-tailored for me and doubles as a practice project to (hopefully) level up my skills someday. 😉
 
-[^1]: [Wikipedia - KISS-Prinzip](https://de.wikipedia.org/wiki/KISS-Prinzip)
-[^2]: [Wikipedia - Bookmarklet](https://de.wikipedia.org/wiki/Bookmarklet)
-
-
-
-
+[^1]: [Wikipedia - KISS-Prinzip](https://en.wikipedia.org/wiki/KISS-Prinzip)
+[^2]: [Wikipedia - Bookmarklet](https://en.wikipedia.org/wiki/Bookmarklet)
+[^3]: [Apache - htaccess](https://httpd.apache.org/docs/2.4/howto/htaccess.html)
 
 
