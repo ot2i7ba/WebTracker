@@ -163,6 +163,7 @@ Ensure that your secret value is kept confidential and is not shared. This secre
 - **URL**: `https://<YOUR_DOMAIN>/favorites.php?secret=<YOUR_SECRET_VALUE>`
 
 # Changes
+I've made some updates to the Simple Web-Link-Tracker to enhance performance, security and functionality. Check out the changes below:
 
 ## 2024-07-26
 1. **Error Handling:**
@@ -189,13 +190,11 @@ Ensure that your secret value is kept confidential and is not shared. This secre
    - Restricted the length of email fields to avoid potential abuse.
 
 ## 2024-07-25
-I've made some updates to the Simple Bookmarklet Web-Link-Tracker to enhance security and functionality. Check out the changes below:
+1. **Security Boost with IN_APP Constant**<br/>Added the IN_APP constant to make sure certain files can’t be accessed directly. It’s defined in favorites.php and checked in favconfig.php and blacklist.php to block unauthorized access.
 
-- **Security Boost with IN_APP Constant**<br/>Added the IN_APP constant to make sure certain files can’t be accessed directly. It’s defined in favorites.php and checked in favconfig.php and blacklist.php to block unauthorized access.
+2. **Switched from blacklist.txt to blacklist.php**<br/>The domain blacklist is now in blacklist.php instead of blacklist.txt. This is more secure because it prevents direct access.
 
-- **Switched from blacklist.txt to blacklist.php**<br/>The domain blacklist is now in blacklist.php instead of blacklist.txt. This is more secure because it prevents direct access.
-
-- **Switched from proxy.txt to proxy.json**<br/>The log file for the proxy has been switched from proxy.txt to proxy.json to better structure the data and make it easier to manage.
+3. **Switched from proxy.txt to proxy.json**<br/>The log file for the proxy has been switched from proxy.txt to proxy.json to better structure the data and make it easier to manage.
 
 ___
 
