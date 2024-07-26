@@ -56,7 +56,7 @@
             // Load configuration
             $config = include('favconfig.php');
 
-            // Define secret value and other constants
+            // Define constants from config
             define('SECRET_VALUE', $config['secrets']['SECRET_VALUE']);
             define('MAX_LINKS_PER_PAGE', $config['limits']['MAX_LINKS_PER_PAGE']);
             define('MAX_TITLE_LENGTH', $config['limits']['MAX_TITLE_LENGTH']);
@@ -65,22 +65,19 @@
             define('FROM_ADDRESS', $config['email']['FROM_ADDRESS']);
             define('DAYS_BEFORE_DELETION', $config['limits']['DAYS_BEFORE_DELETION']);
             define('MAX_REQUESTS_PER_MINUTE', $config['limits']['MAX_REQUESTS_PER_MINUTE']);
+            define('CACHE_TIME', $config['cache']['CACHE_TIME']);
+            define('CACHE_DIR', $config['cache']['CACHE_DIR']);
 
             // Path to the JSON file and lock file
             $file = $config['paths']['favorites'];
             $lockFile = $config['paths']['lock'];
             $intruder = $config['paths']['intruder'];
             $blacklist = $config['paths']['blacklist'];
-            $cacheDir = 'cache';
 
             // Ensure the cache directory exists
-            if (!is_dir($cacheDir)) {
-                mkdir($cacheDir, 0700, true);
+            if (!is_dir(CACHE_DIR)) {
+                mkdir(CACHE_DIR, 0700, true);
             }
-
-            // Simple caching mechanism
-            $cache_file = $cacheDir . '/cache_' . md5($file) . '.json';
-            $cache_time = 60; // Cache duration in seconds
 
             // Function to validate and sanitize input
             function validate_input($input, $type) {
@@ -119,8 +116,9 @@
 
             // Function to read the favorites from the JSON file with caching
             function read_favorites($file, $reverse = true) {
-                global $cache_file, $cache_time;
-                if (file_exists($cache_file) && (time() - filemtime($cache_file) < $cache_time)) {
+                global $cache_file;
+                $cache_file = CACHE_DIR . '/cache_' . md5($file) . '.json';
+                if (file_exists($cache_file) && (time() - filemtime($cache_file) < CACHE_TIME)) {
                     $favorites = json_decode(file_get_contents($cache_file), true);
                 } else {
                     $favorites = json_decode(file_get_contents($file), true) ?: [];
@@ -214,7 +212,7 @@
                 $eol = PHP_EOL;
 
                 // Headers
-                $headers = "From: " . FROM_ADDRESS . $eol;
+                $headers = "From: " . sanitize_email_header(FROM_ADDRESS) . $eol;
                 $headers .= "MIME-Version: 1.0" . $eol;
                 $headers .= "Content-Type: multipart/mixed; boundary=\"" . $separator . "\"" . $eol;
                 $headers .= "Content-Transfer-Encoding: 7bit" . $eol;
@@ -242,6 +240,11 @@
                 }
             }
 
+            // Function to sanitize email headers
+            function sanitize_email_header($header) {
+                return preg_replace('/\r\n|\r|\n/', '', $header);
+            }
+
             // Function to clean up old cache and rate limit files
             function clean_old_files($dir, $lifetime = 3600) {
                 foreach (glob("$dir/*") as $file) {
@@ -252,7 +255,7 @@
             }
 
             // Ensure cache directory is cleaned up
-            clean_old_files($cacheDir);
+            clean_old_files(CACHE_DIR);
 
             // Check if the secret value is provided and valid
             if (!isset($_GET['secret']) || $_GET['secret'] !== SECRET_VALUE) {
@@ -309,18 +312,26 @@
 
             // Handle deletion of a favorite
             if (isset($_GET['delete'])) {
-                $url_to_delete = validate_input($_GET['delete'], 'url');
-                if ($url_to_delete !== false) {
-                    $lockHandle = fopen($lockFile, 'r');
-                    flock($lockHandle, LOCK_EX);
-                    delete_favorite_by_url($favorites, $url_to_delete);
-                    file_put_contents($file, json_encode($favorites, JSON_PRETTY_PRINT));
-                    file_put_contents($cache_file, json_encode($favorites)); // Update cache
-                    flock($lockHandle, LOCK_UN);
-                    fclose($lockHandle);
-                    show_message("The URL has been deleted successfully.");
-                } else {
-                    show_message("Error: Invalid URL for deletion.", true);
+                try {
+                    $url_to_delete = validate_input($_GET['delete'], 'url');
+                    if ($url_to_delete !== false) {
+                        $lockHandle = fopen($lockFile, 'r');
+                        if ($lockHandle) {
+                            flock($lockHandle, LOCK_EX);
+                            delete_favorite_by_url($favorites, $url_to_delete);
+                            file_put_contents($file, json_encode($favorites, JSON_PRETTY_PRINT));
+                            file_put_contents($cache_file, json_encode($favorites)); // Update cache
+                            flock($lockHandle, LOCK_UN);
+                            fclose($lockHandle);
+                            show_message("The URL has been deleted successfully.");
+                        } else {
+                            throw new Exception("Could not open lock file.");
+                        }
+                    } else {
+                        show_message("Error: Invalid URL for deletion.", true);
+                    }
+                } catch (Exception $e) {
+                    show_message("An error occurred: " . $e->getMessage(), true);
                 }
             }
 
@@ -342,31 +353,39 @@
 
             // Handle adding a new favorite
             if (isset($_GET['url']) && isset($_GET['title'])) {
-                $url = validate_input($_GET['url'], 'url');
-                $title = validate_input($_GET['title'], 'string');
-                $title = escape($title);
-                if ($url && strlen($url) <= 2048 && $title && strlen($title) <= MAX_TITLE_LENGTH) {
-                    $lockHandle = fopen($lockFile, 'r');
-                    flock($lockHandle, LOCK_EX);
-                    $error = add_favorite($favorites, $url, $title, $blacklist_domains);
-                    if ($error) {
-                        show_message($error, true);
+                try {
+                    $url = validate_input($_GET['url'], 'url');
+                    $title = validate_input($_GET['title'], 'string');
+                    $title = escape($title);
+                    if ($url && strlen($url) <= 2048 && $title && strlen($title) <= MAX_TITLE_LENGTH) {
+                        $lockHandle = fopen($lockFile, 'r');
+                        if ($lockHandle) {
+                            flock($lockHandle, LOCK_EX);
+                            $error = add_favorite($favorites, $url, $title, $blacklist_domains);
+                            if ($error) {
+                                show_message($error, true);
+                            } else {
+                                file_put_contents($file, json_encode($favorites, JSON_PRETTY_PRINT));
+                                file_put_contents($cache_file, json_encode($favorites)); // Update cache
+                                show_message("The URL has been added successfully.");
+                            }
+                            flock($lockHandle, LOCK_UN);
+                            fclose($lockHandle);
+                        } else {
+                            throw new Exception("Could not open lock file.");
+                        }
                     } else {
-                        file_put_contents($file, json_encode($favorites, JSON_PRETTY_PRINT));
-                        file_put_contents($cache_file, json_encode($favorites)); // Update cache
-                        show_message("The URL has been added successfully.");
+                        show_message("An unexpected error occurred. Please try again later.", true);
                     }
-                    flock($lockHandle, LOCK_UN);
-                    fclose($lockHandle);
-                } else {
-                    show_message("An unexpected error occurred. Please try again later.", true);
+                } catch (Exception $e) {
+                    show_message("An error occurred: " . $e->getMessage(), true);
                 }
                 exit;
             }
 
             // Check rate limiting based on IP address
             $ip_address = $_SERVER['REMOTE_ADDR'];
-            $rate_limit_file = $cacheDir . '/rate_limit_' . md5($ip_address) . '.json';
+            $rate_limit_file = CACHE_DIR . '/rate_limit_' . md5($ip_address) . '.json';
             $rate_limit = json_decode(@file_get_contents($rate_limit_file), true) ?: ['requests' => 0, 'timestamp' => time()];
 
             if (time() - $rate_limit['timestamp'] < 60) {
@@ -453,7 +472,7 @@
         <div class="copyright">
             made with <img src="assets/icons/heart.svg" width="12" height="12"> by (c) 2023-<?php $currentYear = date('Y'); echo $currentYear; ?> 
             <a href="https://github.com/ot2i7ba/" rel="noopener noreferrer" target="_blank">ot2i7ba</a>,<br>
-            without Java, Perl, MySQL or Postgres.
+            without Java, Perl, MySQL, Postgres and specialist knowledge. :)
         </div> 
     </div>
 </body>

@@ -37,15 +37,6 @@ I've intentionally kept this project simple by using only basic tools: PHP, a bi
 
 - **bookmarklet.txt**<br/>Contains the JavaScript code for the bookmarklet, which enables users to send bookmarks to the main application easily.
 
-# Last Update (2024-07-25)
-I've made some updates to the Simple Bookmarklet Web-Link-Tracker to enhance security and functionality. Check out the changes below:
-
-- **Security Boost with IN_APP Constant**<br/>Added the IN_APP constant to make sure certain files can’t be accessed directly. It’s defined in favorites.php and checked in favconfig.php and blacklist.php to block unauthorized access.
-
-- **Switched from blacklist.txt to blacklist.php**<br/>The domain blacklist is now in blacklist.php instead of blacklist.txt. This is more secure because it prevents direct access.
-
-- **Switched from proxy.txt to proxy.json**<br/>The log file for the proxy has been switched from proxy.txt to proxy.json to better structure the data and make it easier to manage.
-
 # Configuration
 
 ### favconfig.php
@@ -170,6 +161,41 @@ This configuration helps enforce HTTPS, limit request sizes, protect sensitive f
 Ensure that your secret value is kept confidential and is not shared. This secret value is critical for the security of your bookmark management system. The `favorites.php` file can only be accessed when the correct secret is included in the URL. This measure helps protect against unauthorized access, spam, and abuse.<br/>
 
 - **URL**: `https://<YOUR_DOMAIN>/favorites.php?secret=<YOUR_SECRET_VALUE>`
+
+# Changes
+
+## 2024-07-26
+1. **Error Handling:**
+   - Added more detailed and user-friendly error messages.
+   - Utilized `try-catch` blocks for better error handling, providing specific feedback to users.
+
+2. **Security Enhancements:**
+   - Implemented stricter validation and sanitization of user inputs to enhance security.
+   - Continued use of PHP sessions for CSRF token management, ensuring protection against cross-site request forgery.
+
+3. **Code Cleanup:**
+   - Centralized configuration settings in `favconfig.php` for better manageability.
+   - Improved code readability by using constants and variables for recurring values (e.g., cache times, file paths).
+   - Modularized the code further by breaking down larger functions into smaller, more manageable ones.
+
+4. **Performance Optimization:**
+   - Enhanced the caching mechanism by externalizing cache configuration (e.g., `CACHE_TIME` and `CACHE_DIR`) to `favconfig.php`.
+   - Proposed future implementation of advanced caching mechanisms (e.g., Memcached or Redis) for further performance improvements.
+
+5. **Email Improvements:**
+   - Added validation to ensure that only valid email addresses are used.
+   - Prevented header injection attacks by sanitizing email headers.
+   - Structured email headers and body for the `mail` function to ensure secure and consistent email sending.
+   - Restricted the length of email fields to avoid potential abuse.
+
+## 2024-07-25
+I've made some updates to the Simple Bookmarklet Web-Link-Tracker to enhance security and functionality. Check out the changes below:
+
+- **Security Boost with IN_APP Constant**<br/>Added the IN_APP constant to make sure certain files can’t be accessed directly. It’s defined in favorites.php and checked in favconfig.php and blacklist.php to block unauthorized access.
+
+- **Switched from blacklist.txt to blacklist.php**<br/>The domain blacklist is now in blacklist.php instead of blacklist.txt. This is more secure because it prevents direct access.
+
+- **Switched from proxy.txt to proxy.json**<br/>The log file for the proxy has been switched from proxy.txt to proxy.json to better structure the data and make it easier to manage.
 
 ___
 

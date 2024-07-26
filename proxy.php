@@ -23,15 +23,13 @@ define('RATE_LIMIT_COUNT', 10);
 $allowedFiles = ['favorites.json', 'intruder.json', 'proxy.json'];
 
 // Function to check if the requested filename is allowed
-function isAllowedFilename($filename)
-{
+function isAllowedFilename($filename) {
     global $allowedFiles;
     return in_array($filename, $allowedFiles);
 }
 
 // Function to check if the user has reached the rate limit
-function isRateLimited()
-{
+function isRateLimited() {
     if (!isset($_SESSION['rate_limit_timestamp'])) {
         $_SESSION['rate_limit_timestamp'] = time();
         $_SESSION['rate_limit_count'] = 0;
@@ -60,8 +58,7 @@ $secret = filter_input(INPUT_GET, 'secret', FILTER_SANITIZE_STRING);
 $file = filter_input(INPUT_GET, 'file', FILTER_SANITIZE_STRING);
 
 // Function to log failed access attempts
-function logFailedAttempt($secret, $file)
-{
+function logFailedAttempt($secret, $file) {
     $log_file = 'proxy.json';
 
     // Check if the log file exists, create it if not
@@ -95,8 +92,7 @@ function logFailedAttempt($secret, $file)
 }
 
 // Function to handle errors and log attempts
-function handleError($statusCode, $message, $secret = '', $file = '')
-{
+function handleError($statusCode, $message, $secret = '', $file = '') {
     logFailedAttempt($secret, $file);
     http_response_code($statusCode);
     echo $message;

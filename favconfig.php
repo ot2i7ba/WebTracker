@@ -31,8 +31,14 @@ return [
 
     // Email Configuration
     'email' => [
-        'EMAIL_ADDRESS' => '<YOUR_EMAIL>',
-        'FROM_ADDRESS' => '<YOUR_EMAIL>',
+        'EMAIL_ADDRESS' => filter_var('<YOUR_EMAIL>', FILTER_VALIDATE_EMAIL),
+        'FROM_ADDRESS' => filter_var('<YOUR_EMAIL>', FILTER_VALIDATE_EMAIL),
+    ],
+
+    // Cache Configuration
+    'cache' => [
+        'CACHE_TIME' => 60,
+        'CACHE_DIR' => 'cache'
     ],
 
     // File Paths
