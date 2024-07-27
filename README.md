@@ -44,18 +44,28 @@ Before using the application, you need to configure the `favconfig.php` file. Op
 
 ```php
 <?php
-// Secret Values
-'secrets' => [
-    'SECRET_VALUE' => '<YOUR_SECRET_VALUE>',
-],
+// Ensure this file cannot be accessed directly
+if (!defined('IN_APP')) {
+    header('HTTP/1.1 403 Forbidden');
+    exit('Direct access not permitted');
+}
+
+return [
+    // Secret Values
+    'secrets' => [
+        'SECRET_VALUE' => '<YOUR_SECRET_VALUE>',
+    ],
 
 [...]
 
-// Email Configuration
-'email' => [
-    'EMAIL_ADDRESS' => '<YOUR_EMAIL>',
-    'FROM_ADDRESS' => '<YOUR_EMAIL>',
-],
+    // Email Configuration
+    'email' => [
+        'EMAIL_ADDRESS' => filter_var('<YOUR_EMAIL>', FILTER_VALIDATE_EMAIL),
+        'FROM_ADDRESS' => filter_var('<YOUR_EMAIL>', FILTER_VALIDATE_EMAIL),
+    ],
+
+[...]
+
 ?>
 ```
 
@@ -78,12 +88,21 @@ $base_path = '/path/to/base/';
 
 Replace `<YOUR_SECRET_VALUE>` with the same value you set in `favconfig.php` and adjust the `$base_path` to your desired base path.
 
-### blacklist.txt
-To prevent certain domains from being bookmarked, you can add them to `blacklist.txt`. Each domain should be listed on a new line:
+### blacklist.php
+To prevent certain domains from being bookmarked, you can add them to `blacklist.php`. Each domain should be listed like this:
 
-```
-example.com
-google.com
+```php
+// Ensure this file cannot be accessed directly
+if (!defined('IN_APP')) {
+    header('HTTP/1.1 403 Forbidden');
+    exit('Direct access not permitted');
+}
+
+// Return an array of blacklisted domains
+return [
+    'google.com',
+    'google.de',
+];
 ```
 
 ### bookmarklet.txt
@@ -155,7 +174,7 @@ This configuration helps enforce HTTPS, limit request sizes, protect sensitive f
 
 - **Manage Bookmarks**<br/>Use the `favorites.php` application to view, edit, and manage your bookmarks.<br/>**URL**: https://<YOUR_DOMAIN>/favorites.php?secret=<YOUR_SECRET_VALUE>
 
-- **Blacklist Management**<br/>Update `blacklist.txt` to add or remove domains that should be ignored by the bookmarklet.
+- **Blacklist Management**<br/>Update `blacklist.php` to add or remove domains that should be ignored by the bookmarklet.
 
 # Security
 Ensure that your secret value is kept confidential and is not shared. This secret value is critical for the security of your bookmark management system. The `favorites.php` file can only be accessed when the correct secret is included in the URL. This measure helps protect against unauthorized access, spam, and abuse.<br/>
