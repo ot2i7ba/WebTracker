@@ -163,7 +163,36 @@ Ensure that your secret value is kept confidential and is not shared. This secre
 - **URL**: `https://<YOUR_DOMAIN>/favorites.php?secret=<YOUR_SECRET_VALUE>`
 
 # Changes
-I've made some updates to the Simple Web-Link-Tracker to enhance performance, security and functionality. Check out the changes below:
+I've made some updates to the Simple Web-Link-Tracker to enhance structure, readability, performance, security and functionality. Check out the changes below:
+
+## 2024-07-27
+1. **Improved Function Grouping**
+   - Reorganized functions into logical groups to enhance readability and maintainability.
+
+2. **Security Enhancements**
+   - Ensured HTTPS connection check is performed early in the script.
+   - Added CSRF token generation at the beginning for enhanced security.
+
+3. **File Existence Check**
+   - Implemented `file_exists_secure` function for checking file existence in a secure manner.
+   - Used this function to conditionally display links to JSON files in the footer only if they exist.
+
+4. **Modular Functions**
+   - Separated concerns by grouping similar functions together (e.g., functions for handling favorites, email-related functions).
+
+5. **New Functionality**
+   - Added `get_oldest_link_age` function to calculate and display the age of the oldest link in the measured values section.
+   - Included logic to display the maximum days to keep links in the measured values section.
+
+6. **Code Cleanup**
+   - Removed redundant or repetitive code and comments for clarity.
+   - Enhanced error handling in various parts of the script.
+
+7. **Footer and Measured Values Enhancements**
+   - Improved footer logic to ensure links are displayed conditionally based on file existence.
+   - Enhanced measured values section to include processing time and the age of the oldest link.
+
+8. **Favicon Integration**
 
 ## 2024-07-26
 1. **Error Handling:**

@@ -12,10 +12,10 @@
     <meta http-equiv="Expires" content="0">
     <meta http-equiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains; preload">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="X-Frame-Options" content="DENY">
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     <!-- Styles -->
     <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
 </head>
 
 <body>
@@ -36,22 +36,22 @@
             // Define a constant to ensure scripts are not accessed directly
             define('IN_APP', true);
 
-            // Create a session ID to avoid IP tracking
-            if (!isset($_SESSION['session_id'])) {
-                $_SESSION['session_id'] = bin2hex(random_bytes(16));
+            // Ensure HTTPS connection
+            if (!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS'] !== 'on') {
+                show_message("Secure connection required.", true);
+                exit;
             }
-            $session_id = $_SESSION['session_id'];
 
             // Generate a CSRF token
             if (empty($_SESSION['csrf_token'])) {
                 $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             }
 
-            // Ensure HTTPS connection
-            if (!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS'] !== 'on') {
-                show_message("Secure connection required.", true);
-                exit;
+            // Create a session ID to avoid IP tracking
+            if (!isset($_SESSION['session_id'])) {
+                $_SESSION['session_id'] = bin2hex(random_bytes(16));
             }
+            $session_id = $_SESSION['session_id'];
 
             // Load configuration
             $config = include('favconfig.php');
@@ -79,6 +79,11 @@
                 mkdir(CACHE_DIR, 0700, true);
             }
 
+            // Function to check if a file exists
+            function file_exists_secure($filepath) {
+                return file_exists($filepath);
+            }
+
             // Function to validate and sanitize input
             function validate_input($input, $type) {
                 switch ($type) {
@@ -101,9 +106,21 @@
                 }
             }
 
-            create_file_if_not_exists($file, json_encode([]));
-            create_file_if_not_exists($lockFile);
-            create_file_if_not_exists($intruder, json_encode([]));
+            // Function to show messages
+            function show_message($message, $is_error = false) {
+                $class = $is_error ? 'error' : 'success';
+                echo "<div class='{$class}'>{$message}</div>";
+            }
+
+            // Function to escape strings
+            function escape($string) {
+                return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+            }
+
+            // Function to sanitize email headers
+            function sanitize_email_header($header) {
+                return preg_replace('/\r\n|\r|\n/', '', $header);
+            }
 
             // Function to read the blacklist
             function read_blacklist($blacklist) {
@@ -153,6 +170,35 @@
                 });
             }
 
+            // Function to check if the URL is blacklisted
+            function is_blacklisted($url, $blacklist_domains) {
+                $parsed_url = parse_url($url);
+                if (!isset($parsed_url['host'])) {
+                    return false;
+                }
+                $host = $parsed_url['host'];
+                foreach ($blacklist_domains as $blacklisted_domain) {
+                    if (stripos($host, trim($blacklisted_domain)) !== false) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            // Function to calculate the age of the oldest link
+            function get_oldest_link_age($favorites) {
+                if (empty($favorites)) {
+                    return null;
+                }
+
+                $oldest_link = min(array_column($favorites, 'timestamp'));
+                $oldest_date = DateTime::createFromFormat('Y-m-d H:i:s', $oldest_link);
+                $current_date = new DateTime();
+                $interval = $current_date->diff($oldest_date);
+                
+                return $interval->days;
+            }
+
             // Function to clean up old data and send backup email
             function cleanup_old_data(&$favorites, $file, $email_address) {
                 global $cache_file;
@@ -189,17 +235,6 @@
                 // Save updated favorites and update cache
                 file_put_contents($file, json_encode($favorites, JSON_PRETTY_PRINT));
                 file_put_contents($cache_file, json_encode($favorites));
-            }
-
-            // Function to show messages
-            function show_message($message, $is_error = false) {
-                $class = $is_error ? 'error' : 'success';
-                echo "<div class='{$class}'>{$message}</div>";
-            }
-
-            // Function to escape strings
-            function escape($string) {
-                return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
             }
 
             // Function to send backup email with favorites.json as attachment
@@ -240,11 +275,6 @@
                 }
             }
 
-            // Function to sanitize email headers
-            function sanitize_email_header($header) {
-                return preg_replace('/\r\n|\r|\n/', '', $header);
-            }
-
             // Function to clean up old cache and rate limit files
             function clean_old_files($dir, $lifetime = 3600) {
                 foreach (glob("$dir/*") as $file) {
@@ -282,26 +312,12 @@
 
             $blacklist_domains = read_blacklist($blacklist);
 
-            // Function to check if the URL is blacklisted
-            function is_blacklisted($url, $blacklist_domains) {
-                $parsed_url = parse_url($url);
-                if (!isset($parsed_url['host'])) {
-                    return false;
-                }
-                $host = $parsed_url['host'];
-                foreach ($blacklist_domains as $blacklisted_domain) {
-                    if (stripos($host, trim($blacklisted_domain)) !== false) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-
             // Read sorting order from query parameter
             $sort_order = $_GET['sort'] ?? 'desc';
 
-            // Cleanup old data
+            // Read favorites, calculate the age of the oldest link, and clean up old data
             $favorites = read_favorites($file, $sort_order === 'desc');
+            $oldest_link_age = get_oldest_link_age($favorites);
             cleanup_old_data($favorites, $file, EMAIL_ADDRESS);
 
             // Handle manual backup request
@@ -457,15 +473,27 @@
         <div class="measured">
             <?php $time_total = microtime(true) - $start; ?>
             Total links: <?php echo count($favorites); ?><br>
+            <?php if ($oldest_link_age !== null): ?>
+                Age of the oldest link: <?php echo $oldest_link_age; ?> day(s)<br>
+                Max days to keep: <?php echo MAX_DAYS_TO_KEEP; ?> day(s)<br>
+            <?php else: ?>
+                No links found.<br>
+            <?php endif; ?>
             Total processing time:<br><?php echo $time_total; ?> seconds.
         </div>
 
         <!-- Footer -->
         <div class="footer">
-            <a href="proxy.php?secret=<?php echo SECRET_VALUE; ?>&file=favorites.json">favorites.json</a>&nbsp;&vert;
-            <a href="proxy.php?secret=<?php echo SECRET_VALUE; ?>&file=intruder.json">intruder.json</a>&nbsp;&vert;
-            <a href="proxy.php?secret=<?php echo SECRET_VALUE; ?>&file=proxy.json">proxy.json</a>&nbsp;&vert;
-            <a href="?secret=<?php echo SECRET_VALUE; ?>&backup=true">Manual Backup</a>
+            <?php if (file_exists_secure($file)): ?>
+                <a href="proxy.php?secret=<?php echo SECRET_VALUE; ?>&file=favorites.json">favorites.json</a>&nbsp;
+            <?php endif; ?>
+            <?php if (file_exists_secure($intruder)): ?>
+                &vert;&nbsp;<a href="proxy.php?secret=<?php echo SECRET_VALUE; ?>&file=intruder.json">intruder.json</a>&nbsp;
+            <?php endif; ?>
+            <?php if (file_exists_secure('proxy.json')): ?>
+                &vert;&nbsp;<a href="proxy.php?secret=<?php echo SECRET_VALUE; ?>&file=proxy.json">proxy.json</a>&nbsp;
+            <?php endif; ?>
+            &vert;&nbsp;<a href="?secret=<?php echo SECRET_VALUE; ?>&backup=true">Manual Backup</a>
         </div>
 
         <!-- Copyright -->
