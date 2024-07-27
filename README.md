@@ -239,7 +239,7 @@ This project is provided without warranties. Users are advised to review the acc
 # Conclusion
 I use this script to keep track of all the cool OSINT links I find during my regular hunts so I don't miss a thing. I'm no professional coder or security expert, but this app is custom-tailored for me and doubles as a practice project to (hopefully) level up my skills someday. 😉
 
-[^1]: [Wikipedia - KISS-Prinzip](https://en.wikipedia.org/wiki/KISS-Prinzip)
+[^1]: [Wikipedia - KISS-Prinzip](https://en.wikipedia.org/wiki/KISS_principle)
 [^2]: [Wikipedia - Bookmarklet](https://en.wikipedia.org/wiki/Bookmarklet)
 [^3]: [Apache - htaccess](https://httpd.apache.org/docs/2.4/howto/htaccess.html)
 
