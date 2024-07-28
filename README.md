@@ -167,6 +167,9 @@ Header set Expires "0"
 
 This configuration helps enforce HTTPS, limit request sizes, protect sensitive files, and enhance overall security through various headers. Remember, these are just examples and may need to be adjusted to fit the specific needs and technical realities of your deployment.
 
+> [!CAUTION]
+> Just by the way. If you rely on others just because they think they know something or claim to know something, then in the worst-case scenario you're abandoned. But if you have no idea - like me - you are well advised to listen to those who have experience. This is not always the best advice, but you are usually better off than if you just use your dangerous half-knowledge. I therefore recommend considering the additional use of the [nG Firewall](https://perishablepress.com/ng-firewall/) for web projects. Not 100% protection either, but another stumbling block.
+
 # Usage
 - **Add Bookmarklet to Browser**<br/>Copy the `Bookmarklet`, create a new bookmark in your browser, and paste the JavaScript code as the URL of the bookmark.
 
