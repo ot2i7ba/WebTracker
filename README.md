@@ -1,6 +1,9 @@
 # Simple Web-Link-Tracker
 Simple Web-Link-Tracker is a lightweight application to manage your bookmarks easily and efficiently. This tool is specifically adapted to my needs, originating from my [favorites](https://github.com/ot2i7ba/favorites/) project that I've been tinkering with to improve in various ways. The application is not intended to be a fully-fledged bookmark management system, but rather a bookmark scribble more or less according to the KISS [^1] principle. It's a simple application with a lot of coding quirks, designed for both functionality and as a coding playground. This repository includes several key files that enable you to set up, configure, and use the application.
 
+> [!CAUTION]
+> This project is based on the original repository by [ot2i7ba](https://github.com/ot2i7ba).
+
 # Features
 This project is packed with a bunch of cool features that I've implemented mainly because I wanted to play around and learn more about these concepts. It's my little sandbox to test out some neat performance, security and coding mechanisms. Here's what I've included:
 
@@ -264,5 +267,6 @@ I use this script to keep track of all the cool OSINT links I find during my reg
 [^1]: [Wikipedia - KISS-Prinzip](https://en.wikipedia.org/wiki/KISS_principle)
 [^2]: [Wikipedia - Bookmarklet](https://en.wikipedia.org/wiki/Bookmarklet)
 [^3]: [Apache - htaccess](https://httpd.apache.org/docs/2.4/howto/htaccess.html)
+
 
 
